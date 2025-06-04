@@ -84,6 +84,7 @@ class ConfigHelper:
         return {
             "H-4": hari_h - timedelta(days=4),
             "H-3": hari_h - timedelta(days=3),
+            "H-2": hari_h - timedelta(days=2),
             "H-1": hari_h - timedelta(days=1),
             "H": hari_h,
             "H+1": hari_h + timedelta(days=1),
@@ -93,6 +94,13 @@ class ConfigHelper:
     def get_form_labels(self, form_type: str) -> Dict[str, Any]:
         """Get form labels for the specified form type"""
         return self.ui_labels["forms"][form_type]
+    
+    def get_form_options(self, form_type: str, option_name: str) -> List[str]:
+        """Get form options for dropdowns"""
+        form_config = self.ui_labels["forms"][form_type]
+        if "options" in form_config:
+            return form_config["options"].get(option_name, [])
+        return []
     
     def get_message(self, message_type: str) -> str:
         """Get UI message by type"""

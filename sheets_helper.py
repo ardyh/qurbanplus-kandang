@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime
 import io
 import magic
+import streamlit as st
 
 SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
@@ -13,8 +14,16 @@ SCOPES = [
 
 class GoogleHelper:
     def __init__(self, credentials_path):
-        self.credentials = service_account.Credentials.from_service_account_file(
-            credentials_path, scopes=SCOPES)
+        if credentials_path == "embedded":
+            # Use embedded credentials from Streamlit secrets
+            creds_info = dict(st.secrets["google_credentials"])
+            self.credentials = service_account.Credentials.from_service_account_info(
+                creds_info, scopes=SCOPES)
+        else:
+            # Use traditional file-based credentials
+            self.credentials = service_account.Credentials.from_service_account_file(
+                credentials_path, scopes=SCOPES)
+        
         self.sheets = build('sheets', 'v4', credentials=self.credentials).spreadsheets()
         self.drive = build('drive', 'v3', credentials=self.credentials)
 

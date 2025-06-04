@@ -1,19 +1,32 @@
 import streamlit as st
 from datetime import datetime, timedelta
 import os
-from dotenv import load_dotenv
 from sheets_helper import GoogleHelper
 from config_helper import ConfigHelper
+from environment_helper import get_environment_helper
 import time
 
-# Always load .env first
-load_dotenv('.env')
-# If DEBUG_MODE is set, load dev.env to override
-if os.getenv('DEBUG_MODE') in ['1', 'true', 'True', 'yes', 'YES']:
-    load_dotenv('dev.env', override=True)
-    debug_mode = True
-else:
-    debug_mode = False
+# Initialize environment helper (cached)
+env_helper = get_environment_helper()
+
+# Validate required secrets for current environment
+required_secrets = [
+    "google.credentials_file",
+    "google.spreadsheet_id", 
+    "google.drive_folder_id"
+]
+
+if not env_helper.validate_required_secrets(required_secrets):
+    st.stop()
+
+# Get configuration from environment helper
+GOOGLE_CREDENTIALS_FILE = env_helper.get_credentials_file()
+SPREADSHEET_ID = env_helper.get_spreadsheet_id()
+DRIVE_FOLDER_ID = env_helper.get_drive_folder_id()
+debug_mode = env_helper.is_debug_mode()
+
+# Show environment info
+env_helper.show_environment_info(show_in_sidebar=True)
 
 # Initialize configuration helper
 @st.cache_resource
@@ -23,21 +36,16 @@ def init_config():
 # Initialize Google helper
 @st.cache_resource
 def init_helper():
-    credentials_file = os.getenv('GOOGLE_CREDENTIALS_FILE')
-    return GoogleHelper(credentials_file)
-
-# Configuration from environment variables
-SPREADSHEET_ID = os.getenv('MASTER_DATA_SHEETS_ID')
-DRIVE_FOLDER_ID = os.getenv('FOTO_NOTA_DRIVE_ID')
+    return GoogleHelper(GOOGLE_CREDENTIALS_FILE)
 
 if not SPREADSHEET_ID or not DRIVE_FOLDER_ID:
-    st.error("Missing required environment variables. Please check your .env or dev.env file.")
-    st.error("MASTER_DATA_SHEETS_ID and FOTO_NOTA_DRIVE_ID are required")
+    st.error("Missing required configuration. Please check your .streamlit/secrets.toml file.")
+    st.error("spreadsheet_id and drive_folder_id are required")
     st.stop()
 
 # Show debug mode indicator
 if debug_mode:
-    st.warning("🧪 Running in DEBUG mode (dev.env overrides)")
+    st.warning("🧪 Running in DEBUG mode")
 
 # Initialize configuration and get values
 config = init_config()
@@ -47,8 +55,6 @@ OUTBOUND_RANGE = config.get_sheet_name("outbound")
 ANIMAL_TYPES = config.get_animal_types()
 SHEEP_CATEGORIES = config.get_sheep_categories()
 COW_CATEGORIES = config.get_cow_categories()
-SHEEP_VENDORS = config.get_sheep_vendors()
-COW_VENDORS = config.get_cow_vendors()
 HARI_OPTIONS = config.get_hari_options("outbound")
 HARI_H = config.get_hari_h_date("outbound")
 
@@ -64,15 +70,9 @@ helper = init_helper()
 if 'animal_entries' not in st.session_state:
     st.session_state.animal_entries = []
 
-# Initialize session state for form inputs if not exists
-if 'form_input' not in st.session_state:
-    st.session_state.form_input = {
-        'animal_type': ANIMAL_TYPES[0]
-    }
-
 # Animal type selection outside the form
 animal_type = st.selectbox(
-    "Jenis Hewan",
+    form_labels["fields"].get("hewan", "Hewan"),  # Use .get() with fallback
     ANIMAL_TYPES,
     key='animal_type'
 )
@@ -86,38 +86,26 @@ with st.form("add_entry_form", clear_on_submit=True):
     
     with col1:
         if animal_type == "Domba/Kambing":
-            st.markdown(f"##### {form_labels['sections']['domba']}")
-            supplier = st.selectbox(
-                form_labels["fields"]["vendor_domba"], 
-                SHEEP_VENDORS, 
-                key="domba_supplier",
-                help="Pilih vendor domba"
-            )
-            variant = st.selectbox(
-                form_labels["fields"]["kategori_domba"], 
+            st.markdown(f"##### {form_labels.get('sections', {}).get('domba', 'Data Domba/Kambing')}")
+            tipe_hewan = st.selectbox(
+                form_labels["fields"].get("tipe_hewan_domba", "Tipe Hewan (Domba/Kambing)"), 
                 SHEEP_CATEGORIES, 
-                key="domba_variant",
-                help="Pilih kategori dan berat domba"
+                key="domba_tipe",
+                help="Pilih tipe domba/kambing"
             )
         else:  # Sapi
-            st.markdown(f"##### {form_labels['sections']['sapi']}")
-            supplier = st.selectbox(
-                form_labels["fields"]["vendor_sapi"], 
-                COW_VENDORS, 
-                key="sapi_supplier",
-                help="Pilih vendor sapi"
-            )
-            variant = st.selectbox(
-                form_labels["fields"]["kategori_sapi"], 
+            st.markdown(f"##### {form_labels.get('sections', {}).get('sapi', 'Data Sapi')}")
+            tipe_hewan = st.selectbox(
+                form_labels["fields"].get("tipe_hewan_sapi", "Tipe Hewan (Sapi)"), 
                 COW_CATEGORIES, 
-                key="sapi_variant",
-                help="Pilih kategori dan berat sapi"
+                key="sapi_tipe",
+                help="Pilih tipe sapi"
             )
     
     with col2:
         st.markdown("##### Jumlah")
         quantity = st.number_input(
-            f"Jumlah {animal_type}", 
+            form_labels["fields"].get("jumlah_hewan", "Jumlah Hewan"), 
             min_value=1, 
             value=1, 
             key="quantity",
@@ -130,8 +118,7 @@ with st.form("add_entry_form", clear_on_submit=True):
         # Add new entry using the current form values
         st.session_state.animal_entries.append({
             'animal_type': animal_type,
-            'supplier': supplier,
-            'variant': variant,
+            'tipe_hewan': tipe_hewan,
             'quantity': quantity
         })
 
@@ -149,9 +136,8 @@ if st.session_state.animal_entries:
         for idx, entry in enumerate(domba_entries):
             with st.container():
                 col1, col2, col3, col4 = st.columns([2,2,1,1])
-                col1.write(f"**Vendor:** {entry['supplier']}")
-                col2.write(f"**Kategori:** {entry['variant']}")
-                col3.write(f"**Jumlah:** {entry['quantity']}")
+                col1.write(f"**Tipe:** {entry['tipe_hewan']}")
+                col2.write(f"**Jumlah:** {entry['quantity']}")
                 
                 # Delete entry form
                 with col4:
@@ -166,9 +152,8 @@ if st.session_state.animal_entries:
         for idx, entry in enumerate(sapi_entries):
             with st.container():
                 col1, col2, col3, col4 = st.columns([2,2,1,1])
-                col1.write(f"**Vendor:** {entry['supplier']}")
-                col2.write(f"**Kategori:** {entry['variant']}")
-                col3.write(f"**Jumlah:** {entry['quantity']}")
+                col1.write(f"**Tipe:** {entry['tipe_hewan']}")
+                col2.write(f"**Jumlah:** {entry['quantity']}")
                 
                 # Delete entry form
                 with col4:
@@ -179,30 +164,51 @@ if st.session_state.animal_entries:
 
 # Main form for final submission
 with st.form("main_form"):
-    st.subheader("Informasi Nota")
+    st.subheader("Informasi Keluar")
     col1, col2 = st.columns(2)
     
     with col1:
-        nomor_nota = st.text_input(form_labels["fields"]["nomor_nota"], key="nomor_nota")
-        nama_pengirim = st.text_input(form_labels["fields"]["nama_pengirim"], key="pengirim")
-        nama_penerima = st.text_input(form_labels["fields"]["nama_penerima"], key="penerima")
+        nomor_mobil = st.text_input(
+            form_labels["fields"].get("nomor_mobil", "Nomor Mobil (Untuk Kirim Hidup)"), 
+            key="nomor_mobil",
+            placeholder=form_labels.get("placeholders", {}).get("nomor_mobil", "Masukkan nomor kendaraan untuk pengiriman hidup")
+        )
         
         hari_keluar_label = st.selectbox(
-            form_labels["fields"]["hari_keluar"],
+            form_labels["fields"].get("hari_keluar", "Hari Keluar"),
             list(HARI_OPTIONS.keys()),
             key="hari_keluar_label",
             help=f"Hari H adalah {HARI_H.strftime('%d %B %Y')}"
         )
         tanggal_keluar = HARI_OPTIONS[hari_keluar_label]
+        
+        jenis_keluar = st.selectbox(
+            form_labels["fields"].get("jenis_keluar", "Jenis Keluar"),
+            config.get_form_options("outbound", "jenis_keluar"),
+            key="jenis_keluar"
+        )
+        
+        # Show additional input if "Lainnya" is selected
+        jenis_keluar_other = ""
+        if jenis_keluar == "Lainnya":
+            jenis_keluar_other = st.text_input(
+                "Sebutkan jenis keluar:",
+                key="jenis_keluar_other",
+                placeholder=form_labels.get("placeholders", {}).get("jenis_keluar_other", "Sebutkan jenis keluar lainnya")
+            )
 
     with col2:
-        tujuan_pengiriman = st.text_input(form_labels["fields"]["tujuan_pengiriman"], key="tujuan")
-        catatan = st.text_area(
-            form_labels["fields"]["catatan"],
-            key="catatan",
-            placeholder=form_labels["placeholders"]["catatan"]
+        surat_jalan = st.text_input(
+            form_labels["fields"].get("surat_jalan", "Surat Jalan (Untuk Kirim Hidup)"),
+            key="surat_jalan",
+            placeholder=form_labels.get("placeholders", {}).get("surat_jalan", "Masukkan nomor/detail surat jalan")
         )
-        receipt_file = st.file_uploader("Upload Foto Nota", type=['pdf', 'png', 'jpg', 'jpeg'])
+        
+        additional_notes = st.text_area(
+            form_labels["fields"].get("additional_notes", "Additional Notes"),
+            key="additional_notes",
+            placeholder=form_labels.get("placeholders", {}).get("additional_notes", "Tambahkan catatan tambahan jika diperlukan")
+        )
 
     submitted = st.form_submit_button("Submit")
     
@@ -212,46 +218,60 @@ with st.form("main_form"):
             st.stop()
             
         try:
-            # Upload receipt if provided
-            receipt_url = None
-            if receipt_file is not None:
-                receipt_url = helper.upload_file(
-                    receipt_file,
-                    f"nota_keluar_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{receipt_file.name}",
-                    DRIVE_FOLDER_ID
-                )
+            # Debug information only in development
+            if debug_mode:
+                st.write(f"Debug: Environment = {env_helper.current_env}")
+                st.write(f"Debug: SPREADSHEET_ID = {SPREADSHEET_ID}")
+                st.write(f"Debug: OUTBOUND_RANGE = {OUTBOUND_RANGE}")
+                st.write(f"Debug: Number of animal entries = {len(st.session_state.animal_entries)}")
             
             # Create records for each animal entry
-            timestamp = datetime.now().strftime("%d %B %Y %H:%M:%S")  # e.g., "03 June 2025 10:00:30"
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # e.g., "03 June 2025 10:00:30"
             
             for entry in st.session_state.animal_entries:
+                # Determine final jenis_keluar value
+                final_jenis_keluar = jenis_keluar
+                if jenis_keluar == "Lainnya" and jenis_keluar_other:
+                    final_jenis_keluar = jenis_keluar_other
+                
                 record = [
                     timestamp,                    # Timestamp
-                    nomor_nota,                   # Nomor Nota
-                    entry['animal_type'],         # Jenis Hewan
-                    entry['supplier'],            # Vendor
-                    entry['variant'],             # Kategori
-                    entry['quantity'],            # Jumlah
-                    tujuan_pengiriman,           # Tujuan Pengiriman
-                    nama_pengirim,               # Nama Pengirim
-                    nama_penerima,               # Nama Penerima
-                    receipt_url or "",           # Foto Nota
-                    tanggal_keluar.strftime("%Y-%m-%d"),  # Tanggal Keluar
-                    catatan or ""                # Catatan
+                    entry['animal_type'],         # Hewan
+                    entry['tipe_hewan'],          # Tipe Hewan
+                    entry['quantity'],            # Jumlah Hewan
+                    nomor_mobil or "",           # Nomor Mobil (Untuk Kirim Hidup)
+                    tanggal_keluar.strftime("%Y-%m-%d"),  # Hari Keluar
+                    final_jenis_keluar,          # Jenis Keluar
+                    surat_jalan or "",           # Surat Jalan (Untuk Kirim Hidup)
+                    additional_notes or ""        # Additional Notes
                 ]
                 
+                if debug_mode:
+                    st.write(f"Debug: Attempting to append record: {record[:3]}...")
+                
                 # Append each record to the sheet
-                helper.append_record(SPREADSHEET_ID, OUTBOUND_RANGE, record)
+                result = helper.append_record(SPREADSHEET_ID, OUTBOUND_RANGE, record)
+                
+                if debug_mode:
+                    st.write(f"Debug: Append result: {result}")
             
             # Clear the form
             st.session_state.animal_entries = []
             
             # Show success popup
-            st.toast(config.get_message("success"), icon='✅')
+            success_message = config.get_message("success")
+            if env_helper.is_development():
+                success_message += " (DEV)"
+                
+            st.toast(success_message, icon='✅')
             time.sleep(1)  # Give time for the user to see the message
             st.rerun()
             
         except Exception as e:
-            error_msg = str(e)
-            st.toast(config.get_message("error"), icon='❌')
-            st.exception(e) 
+            if env_helper.is_production():
+                # In production, show user-friendly error
+                st.toast(config.get_message("error"), icon='❌')
+            else:
+                # In development, show detailed error with details
+                st.toast(f"{config.get_message('error')}: {str(e)}", icon='❌')
+                st.exception(e) 

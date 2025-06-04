@@ -1,19 +1,32 @@
 import streamlit as st
 from datetime import datetime, timedelta
 import os
-from dotenv import load_dotenv
 from sheets_helper import GoogleHelper
 from config_helper import ConfigHelper
+from environment_helper import get_environment_helper
 import time
 
-# Always load .env first
-load_dotenv('.env')
-# If DEBUG_MODE is set, load dev.env to override
-if os.getenv('DEBUG_MODE') in ['1', 'true', 'True', 'yes', 'YES']:
-    load_dotenv('dev.env', override=True)
-    debug_mode = True
-else:
-    debug_mode = False
+# Initialize environment helper (cached)
+env_helper = get_environment_helper()
+
+# Validate required secrets for current environment
+required_secrets = [
+    "google.credentials_file",
+    "google.spreadsheet_id", 
+    "google.drive_folder_id"
+]
+
+if not env_helper.validate_required_secrets(required_secrets):
+    st.stop()
+
+# Get configuration from environment helper
+GOOGLE_CREDENTIALS_FILE = env_helper.get_credentials_file()
+SPREADSHEET_ID = env_helper.get_spreadsheet_id()
+DRIVE_FOLDER_ID = env_helper.get_drive_folder_id()
+debug_mode = env_helper.is_debug_mode()
+
+# Show environment info
+env_helper.show_environment_info(show_in_sidebar=True)
 
 # Initialize configuration helper
 @st.cache_resource
@@ -23,21 +36,16 @@ def init_config():
 # Initialize Google helper
 @st.cache_resource
 def init_helper():
-    credentials_file = os.getenv('GOOGLE_CREDENTIALS_FILE')
-    return GoogleHelper(credentials_file)
-
-# Configuration from environment variables
-SPREADSHEET_ID = os.getenv('MASTER_DATA_SHEETS_ID')
-DRIVE_FOLDER_ID = os.getenv('FOTO_NOTA_DRIVE_ID')
+    return GoogleHelper(GOOGLE_CREDENTIALS_FILE)
 
 if not SPREADSHEET_ID or not DRIVE_FOLDER_ID:
-    st.error("Missing required environment variables. Please check your .env or dev.env file.")
-    st.error("MASTER_DATA_SHEETS_ID and FOTO_NOTA_DRIVE_ID are required")
+    st.error("Missing required configuration. Please check your .streamlit/secrets.toml file.")
+    st.error("spreadsheet_id and drive_folder_id are required")
     st.stop()
 
 # Show debug mode indicator
 if debug_mode:
-    st.warning("🧪 Running in DEBUG mode (dev.env overrides)")
+    st.warning("🧪 Running in DEBUG mode")
 
 # Initialize configuration and get values
 config = init_config()
@@ -206,6 +214,13 @@ with st.form("main_form"):
             st.stop()
             
         try:
+            # Debug information only in development
+            if debug_mode:
+                st.write(f"Debug: Environment = {env_helper.current_env}")
+                st.write(f"Debug: SPREADSHEET_ID = {SPREADSHEET_ID}")
+                st.write(f"Debug: INBOUND_RANGE = {INBOUND_RANGE}")
+                st.write(f"Debug: Number of animal entries = {len(st.session_state.animal_entries)}")
+            
             # Upload receipt if provided
             receipt_url = None
             if receipt_file is not None:
@@ -214,11 +229,13 @@ with st.form("main_form"):
                     f"nota_masuk_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{receipt_file.name}",
                     DRIVE_FOLDER_ID
                 )
+                if debug_mode:
+                    st.write(f"Debug: Receipt uploaded to {receipt_url}")
             
             # Create records for each animal entry
-            timestamp = datetime.now().strftime("%d %B %Y %H:%M:%S")  # e.g., "03 June 2025 10:00:30"
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # e.g., "03 June 2025 10:00:30"
             
-            for entry in st.session_state.animal_entries:
+            for idx, entry in enumerate(st.session_state.animal_entries):
                 record = [
                     timestamp,                    # Timestamp
                     nomor_nota,                   # Nomor Nota
@@ -234,18 +251,32 @@ with st.form("main_form"):
                     catatan or ""                # Catatan
                 ]
                 
+                if debug_mode:
+                    st.write(f"Debug: Attempting to append record {idx + 1}: {record[:3]}...")
+                
                 # Append each record to the sheet
-                helper.append_record(SPREADSHEET_ID, INBOUND_RANGE, record)
+                result = helper.append_record(SPREADSHEET_ID, INBOUND_RANGE, record)
+                
+                if debug_mode:
+                    st.write(f"Debug: Append result for record {idx + 1}: {result}")
             
             # Clear the form
             st.session_state.animal_entries = []
             
             # Show success popup
-            st.toast(config.get_message("success"), icon='✅')
+            success_message = config.get_message("success")
+            if env_helper.is_development():
+                success_message += " (DEV)"
+                
+            st.toast(success_message, icon='✅')
             time.sleep(1)  # Give time for the user to see the message
             st.rerun()
             
         except Exception as e:
-            error_msg = str(e)
-            st.toast(config.get_message("error"), icon='❌')
-            st.exception(e) 
+            if env_helper.is_production():
+                # In production, show user-friendly error
+                st.toast(config.get_message("error"), icon='❌')
+            else:
+                # In development, show detailed error with details
+                st.toast(f"{config.get_message('error')}: {str(e)}", icon='❌')
+                st.exception(e) 
