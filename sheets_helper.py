@@ -69,7 +69,8 @@ class GoogleHelper:
         # Convert to DataFrame with padding for missing columns
         max_cols = max(len(row) for row in values)
         headers = values[0] + [''] * (max_cols - len(values[0]))
-        df = pd.DataFrame(values[1:], columns=headers)
+        appended_values = [v + [''] * (max_cols - len(v)) for v in values[1:]]
+        df = pd.DataFrame(appended_values, columns=headers)
         return df
 
     def upload_file(self, file_bytes, filename, folder_id):

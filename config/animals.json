@@ -1,0 +1,34 @@
+{
+  "animal_types": [
+    "Domba/Kambing",
+    "Sapi"
+  ],
+  "sheep_categories": [
+    "DOMBA BETINA EKONOMIS (±20 KG)",
+    "DOMBA BETINA SUPER (±25 KG)",
+    "DOMBA JANTAN REGULER (±25 KG)",
+    "DOMBA JANTAN SILVER (±32 KG)",
+    "DOMBA JANTAN VIP (±40 KG)",
+    "CROSS DORPER SILVER (±32 KG)",
+    "CROSS DORPER GOLD (±40 KG)",
+    "CROSS DORPER DIAMOND (±50 KG)",
+    "CROSS DORPER PREMIUM (±60 KG)",
+    "CROSS DORPER PLATINUM (±70 KG)",
+    "DOMBA LEGEND (±85 KG)",
+    "DOMBA THE BEST (±100 KG)"
+  ],
+  "cow_categories": [
+    "SAPI HASAN (250 KG)",
+    "SAPI HASAN (270 KG)",
+    "SAPI STANDARD (310 KG)",
+    "SAPI REGULER (360 KG)",
+    "SAPI VIP (410 KG)",
+    "SAPI GOLD (460 KG)",
+    "SAPI DIAMOND (510 KG)",
+    "SAPI PREMIUM (610 KG)",
+    "SAPI PLATINUM (710 KG)",
+    "SAPI ISTIMEWA (810 KG)",
+    "SAPI LEGEND (910 KG)",
+    "SAPI THE BEST (1010 KG)"
+  ]
+} 

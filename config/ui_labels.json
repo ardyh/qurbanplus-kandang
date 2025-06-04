@@ -1,0 +1,58 @@
+{
+  "forms": {
+    "inbound": {
+      "title": "Form Pencatatan Hewan Masuk",
+      "sections": {
+        "domba": "Data Domba",
+        "sapi": "Data Sapi"
+      },
+      "fields": {
+        "nomor_nota": "Nomor Nota (masukkan keseluruhan angka dan huruf)",
+        "nama_pengirim": "Nama Pengirim",
+        "nama_penerima": "Nama Penerima (Tim Kandang)",
+        "sohibul_qurban": "Nama Sohibul Qurban (untuk Titip Sembelih)",
+        "catatan": "Catatan Tambahan",
+        "hari_masuk": "Hari Masuk",
+        "vendor_domba": "Vendor Domba",
+        "vendor_sapi": "Vendor Sapi",
+        "kategori_domba": "Kategori Domba",
+        "kategori_sapi": "Kategori Sapi"
+      },
+      "placeholders": {
+        "catatan": "Biasanya titip sembelih butuh note khusus ciri-ciri hewan"
+      }
+    },
+    "outbound": {
+      "title": "Form Pencatatan Hewan Keluar",
+      "sections": {
+        "domba": "Data Domba/Kambing",
+        "sapi": "Data Sapi"
+      },
+      "fields": {
+        "hewan": "Hewan",
+        "tipe_hewan_domba": "Tipe Hewan (Domba/Kambing)",
+        "tipe_hewan_sapi": "Tipe Hewan (Sapi)",
+        "jumlah_hewan": "Jumlah Hewan",
+        "nomor_mobil": "Nomor Mobil (Untuk Kirim Hidup)",
+        "hari_keluar": "Hari Keluar",
+        "jenis_keluar": "Jenis Keluar",
+        "surat_jalan": "Surat Jalan (Untuk Kirim Hidup)",
+        "additional_notes": "Additional Notes"
+      },
+      "placeholders": {
+        "nomor_mobil": "Masukkan nomor kendaraan untuk pengiriman hidup",
+        "surat_jalan": "Masukkan nomor/detail surat jalan",
+        "additional_notes": "Tambahkan catatan tambahan jika diperlukan",
+        "jenis_keluar_other": "Sebutkan jenis keluar lainnya"
+      },
+      "options": {
+        "jenis_keluar": ["Kirim Hidup", "Lainnya"]
+      }
+    }
+  },
+  "messages": {
+    "success": "Data berhasil disimpan!",
+    "error": "Gagal menyimpan data!",
+    "validation": "Mohon tambahkan minimal satu data hewan terlebih dahulu!"
+  }
+} 

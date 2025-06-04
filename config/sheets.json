@@ -1,0 +1,10 @@
+{
+  "sheet_names": {
+    "inbound": "Inbound",
+    "outbound": "Outbound"
+  },
+  "date_config": {
+    "hari_h": "2025-06-06",
+    "hari_h_outbound": "2025-06-06"
+  }
+} 

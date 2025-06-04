@@ -2,40 +2,50 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-import os
-from dotenv import load_dotenv
 from sheets_helper import GoogleHelper
+from config_helper import ConfigHelper
+from environment_helper import get_environment_helper
 
-# Always load .env first
-load_dotenv('.env')
-# If DEBUG_MODE is set, load dev.env to override
-if os.getenv('DEBUG_MODE') in ['1', 'true', 'True', 'yes', 'YES']:
-    load_dotenv('dev.env', override=True)
-    debug_mode = True
-else:
-    debug_mode = False
+# Initialize environment helper (cached)
+env_helper = get_environment_helper()
+
+# Validate required secrets for current environment
+required_secrets = [
+    "google.credentials_file",
+    "google.spreadsheet_id"
+]
+
+if not env_helper.validate_required_secrets(required_secrets):
+    st.stop()
+
+# Get configuration from environment helper
+GOOGLE_CREDENTIALS_FILE = env_helper.get_credentials_file()
+SPREADSHEET_ID = env_helper.get_spreadsheet_id()
+debug_mode = env_helper.is_debug_mode()
+
+# Initialize configuration helper
+@st.cache_resource
+def init_config():
+    return ConfigHelper()
 
 # Initialize Google helper
 @st.cache_resource
 def init_helper():
-    credentials_file = os.getenv('GOOGLE_CREDENTIALS_FILE')
-    return GoogleHelper(credentials_file)
+    return GoogleHelper(GOOGLE_CREDENTIALS_FILE)
 
-# Configuration from environment variables
-SPREADSHEET_ID = os.getenv('MASTER_DATA_SHEETS_ID')
+# Initialize configuration
+config = init_config()
 
-if not SPREADSHEET_ID:
-    st.error("Missing required environment variables. Please check your .env or dev.env file.")
-    st.error("MASTER_DATA_SHEETS_ID is required")
-    st.stop()
+# Show environment info
+env_helper.show_environment_info(show_in_sidebar=True)
 
 # Show debug mode indicator
 if debug_mode:
-    st.warning("🧪 Running in DEBUG mode (dev.env overrides)")
+    st.warning("🧪 Running in DEBUG mode")
 
-# Sheet ranges
-INBOUND_RANGE = "Inbound!A1:N"
-OUTBOUND_RANGE = "Outbound!A1:N"
+# Get sheet ranges from config
+INBOUND_RANGE = config.get_sheet_name("inbound")
+OUTBOUND_RANGE = config.get_sheet_name("outbound")
 
 st.header("Dashboard Manajemen Qurban")
 

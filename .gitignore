@@ -1,6 +1,5 @@
 # Credentials and sensitive data
 creds/**
-*.json
 *.pem
 *.key
 
