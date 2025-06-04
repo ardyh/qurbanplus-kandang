@@ -7,10 +7,10 @@ import pytz
 
 # Try to load dev.env first, fall back to .env if dev.env doesn't exist
 if os.path.exists('dev.env'):
-    load_dotenv('dev.env')
+    load_dotenv('tests/dev.env')
     print("Using dev.env configuration")
 else:
-    load_dotenv('.env')
+    load_dotenv('tests/.env')
     print("Using .env configuration")
 
 # Check if we're in test mode
@@ -21,7 +21,7 @@ def test_google_sheets(helper, spreadsheet_id):
     print("\n=== Testing Google Sheets Integration ===")
     
     # Test data with WIB timezone
-    test_range = "Inbound!A1:F"
+    test_range = "Test!A1:F"
     wib_timezone = pytz.timezone('Asia/Jakarta')
     test_record = [
         datetime.now(wib_timezone).strftime("%Y-%m-%d %H:%M:%S"),
@@ -99,7 +99,6 @@ def main():
     
     # Show which mode we're running in
     mode = "DEBUG" if os.getenv('DEBUG_MODE') else "PRODUCTION"
-    print(f"\n🔧 Running in {mode} mode using {env_file}")
     print(f"Using Spreadsheet ID: {spreadsheet_id}")
     print(f"Using Drive Folder ID: {folder_id}")
     

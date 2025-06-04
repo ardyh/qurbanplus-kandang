@@ -30,5 +30,359 @@
     "SAPI ISTIMEWA (810 KG)",
     "SAPI LEGEND (910 KG)",
     "SAPI THE BEST (1010 KG)"
-  ]
+  ],
+  "animal_orders": {
+    "Domba": [
+      {
+        "category": "DOMBA BETINA EKONOMIS",
+        "bobotHidupKg": "± 20 KG",
+        "supplier": 23,
+        "vendors": {
+          "UDIN": 250,
+          "KURMA ADZWA": 365,
+          "WIDI": 0,
+          "RBA": 0,
+          "BAROKAH": 0,
+          "AGRO": 0,
+          "": 0
+        },
+        "totalPO": 615
+      },
+      {
+        "category": "DOMBA BETINA SUPER",
+        "bobotHidupKg": "± 25 KG",
+        "supplier": 28,
+        "vendors": {
+          "UDIN": 250,
+          "KURMA ADZWA": 325,
+          "WIDI": 0,
+          "RBA": 0,
+          "BAROKAH": 0,
+          "AGRO": 0,
+          "": 0
+        },
+        "totalPO": 575
+      },
+      {
+        "category": "DOMBA JANTAN REGULER",
+        "bobotHidupKg": "± 25 KG",
+        "supplier": 28,
+        "vendors": {
+          "UDIN": 0,
+          "KURMA ADZWA": 0,
+          "WIDI": 400,
+          "RBA": 27,
+          "BAROKAH": 43,
+          "AGRO": 0,
+          "": 0
+        },
+        "totalPO": 470
+      },
+      {
+        "category": "DOMBA JANTAN SILVER",
+        "bobotHidupKg": "± 32 KG",
+        "supplier": 35,
+        "vendors": {
+          "UDIN": 0,
+          "KURMA ADZWA": 60,
+          "WIDI": 50,
+          "RBA": 250,
+          "BAROKAH": 0,
+          "AGRO": 0,
+          "": 0
+        },
+        "totalPO": 360
+      },
+      {
+        "category": "DOMBA JANTAN VIP",
+        "bobotHidupKg": "± 40 KG",
+        "supplier": 43,
+        "vendors": {
+          "UDIN": 0,
+          "KURMA ADZWA": 20,
+          "WIDI": 30,
+          "RBA": 270,
+          "BAROKAH": 0,
+          "AGRO": 0,
+          "": 0
+        },
+        "totalPO": 320
+      },
+      {
+        "category": "CROSS DORPER SILVER",
+        "bobotHidupKg": "± 32 KG",
+        "supplier": 35,
+        "vendors": {
+          "UDIN": 0,
+          "KURMA ADZWA": 0,
+          "WIDI": 0,
+          "RBA": 0,
+          "BAROKAH": 45,
+          "AGRO": 50,
+          "": 0
+        },
+        "totalPO": 95
+      },
+      {
+        "category": "CROSS DORPER GOLD",
+        "bobotHidupKg": "± 40 KG",
+        "supplier": 42,
+        "vendors": {
+          "UDIN": 0,
+          "KURMA ADZWA": 0,
+          "WIDI": 0,
+          "RBA": 0,
+          "BAROKAH": 24,
+          "AGRO": 192,
+          "": 0
+        },
+        "totalPO": 216
+      },
+      {
+        "category": "CROSS DORPER DIAMOND",
+        "bobotHidupKg": "± 50 KG",
+        "supplier": 53,
+        "vendors": {
+          "UDIN": 0,
+          "KURMA ADZWA": 0,
+          "WIDI": 0,
+          "RBA": 100,
+          "BAROKAH": 132,
+          "AGRO": 0,
+          "": 0
+        },
+        "totalPO": 232
+      },
+      {
+        "category": "CROSS DORPER PREMIUM",
+        "bobotHidupKg": "± 60 KG",
+        "supplier": 63,
+        "vendors": {
+          "UDIN": 0,
+          "KURMA ADZWA": 0,
+          "WIDI": 0,
+          "RBA": 10,
+          "BAROKAH": 56,
+          "AGRO": 0,
+          "": 0
+        },
+        "totalPO": 66
+      },
+      {
+        "category": "CROSS DORPER PLATINUM",
+        "bobotHidupKg": "± 70 KG",
+        "supplier": 73,
+        "vendors": {
+          "UDIN": 0,
+          "KURMA ADZWA": 0,
+          "WIDI": 0,
+          "RBA": 10,
+          "BAROKAH": 11,
+          "AGRO": 0,
+          "": 0
+        },
+        "totalPO": 21
+      },
+      {
+        "category": "DOMBA LEGEND",
+        "bobotHidupKg": "± 85 KG",
+        "supplier": 88,
+        "vendors": {
+          "UDIN": 0,
+          "KURMA ADZWA": 0,
+          "WIDI": 21,
+          "RBA": 0,
+          "BAROKAH": 0,
+          "AGRO": 0,
+          "": 0
+        },
+        "totalPO": 21
+      },
+      {
+        "category": "DOMBA THE BEST",
+        "bobotHidupKg": "± 100 KG",
+        "supplier": 103,
+        "vendors": {
+          "UDIN": 7,
+          "KURMA ADZWA": 0,
+          "WIDI": 0,
+          "RBA": 10,
+          "BAROKAH": 0,
+          "AGRO": 1,
+          "": 3
+        },
+        "totalPO": 21
+      }
+    ],
+    "Sapi": [
+      {
+        "category": "SAPI HASAN",
+        "bobotHidupKg": 250,
+        "supplier": 250,
+        "vendors": {
+          "HASAN": 0,
+          "WIDI": 0,
+          "YUKS QRBN": 3,
+          "YRA": 0,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 3
+      },
+      {
+        "category": "SAPI HASAN",
+        "bobotHidupKg": 270,
+        "supplier": 270,
+        "vendors": {
+          "HASAN": 12,
+          "WIDI": 0,
+          "YUKS QRBN": 0,
+          "YRA": 0,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 12
+      },
+      {
+        "category": "SAPI STANDARD",
+        "bobotHidupKg": 300,
+        "supplier": 310,
+        "vendors": {
+          "HASAN": 18,
+          "WIDI": 1,
+          "YUKS QRBN": 9,
+          "YRA": 0,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 28
+      },
+      {
+        "category": "SAPI REGULER",
+        "bobotHidupKg": 350,
+        "supplier": 360,
+        "vendors": {
+          "HASAN": 3,
+          "WIDI": 2,
+          "YUKS QRBN": 6,
+          "YRA": 5,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 16
+      },
+      {
+        "category": "SAPI VIP",
+        "bobotHidupKg": 400,
+        "supplier": 410,
+        "vendors": {
+          "HASAN": 7,
+          "WIDI": 7,
+          "YUKS QRBN": 1,
+          "YRA": 0,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 15
+      },
+      {
+        "category": "SAPI GOLD",
+        "bobotHidupKg": 450,
+        "supplier": 460,
+        "vendors": {
+          "HASAN": 0,
+          "WIDI": 5,
+          "YUKS QRBN": 2,
+          "YRA": 2,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 9
+      },
+      {
+        "category": "SAPI DIAMOND",
+        "bobotHidupKg": 500,
+        "supplier": 510,
+        "vendors": {
+          "HASAN": 0,
+          "WIDI": 5,
+          "YUKS QRBN": 3,
+          "YRA": 0,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 8
+      },
+      {
+        "category": "SAPI PREMIUM",
+        "bobotHidupKg": 600,
+        "supplier": 610,
+        "vendors": {
+          "HASAN": 0,
+          "WIDI": 2,
+          "YUKS QRBN": 0,
+          "YRA": 0,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 2
+      },
+      {
+        "category": "SAPI PLATINUM",
+        "bobotHidupKg": 700,
+        "supplier": 710,
+        "vendors": {
+          "HASAN": 0,
+          "WIDI": 2,
+          "YUKS QRBN": 0,
+          "YRA": 0,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 2
+      },
+      {
+        "category": "SAPI ISTIMEWA",
+        "bobotHidupKg": 800,
+        "supplier": 810,
+        "vendors": {
+          "HASAN": 0,
+          "WIDI": 0,
+          "YUKS QRBN": 0,
+          "YRA": 0,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 0
+      },
+      {
+        "category": "SAPI LEGEND",
+        "bobotHidupKg": 900,
+        "supplier": 910,
+        "vendors": {
+          "HASAN": 0,
+          "WIDI": 0,
+          "YUKS QRBN": 0,
+          "YRA": 0,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 0
+      },
+      {
+        "category": "SAPI THE BEST",
+        "bobotHidupKg": 1000,
+        "supplier": 1010,
+        "vendors": {
+          "HASAN": 0,
+          "WIDI": 1,
+          "YUKS QRBN": 1,
+          "YRA": 0,
+          "OPEN PO 2": 0,
+          "PO 3": 0
+        },
+        "totalPO": 2
+      }
+    ]
+  }  
 } 

@@ -15,7 +15,8 @@ except ImportError:
 
 SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive.file'
+    'https://www.googleapis.com/auth/drive.file',
+    'https://www.googleapis.com/auth/drive'
 ]
 
 class GoogleHelper:
@@ -34,106 +35,139 @@ class GoogleHelper:
         self.drive = build('drive', 'v3', credentials=self.credentials)
 
     def append_record(self, spreadsheet_id, range_name, values):
-        # First, get all existing data to find the next empty row
-        try:
-            result = self.sheets.values().get(
-                spreadsheetId=spreadsheet_id,
-                range=f"{range_name}!A:A"
-            ).execute()
-            existing_values = result.get('values', [])
-            next_row = len(existing_values) + 1
-        except:
-            # If sheet doesn't exist or has no data, start at row 2 (after header)
-            next_row = 2
-            
-        body = {
-            'values': [values]
-        }
+        max_retries = 3
+        retry_delay = 2
         
-        # Calculate the end column based on number of values
-        end_column_index = len(values) - 1
-        end_column = chr(65 + end_column_index)  # Convert to letter (A=0, B=1, etc.)
-        
-        result = self.sheets.values().update(
-            spreadsheetId=spreadsheet_id,
-            range=f"{range_name}!A{next_row}:{end_column}{next_row}",  # Specify exact range
-            valueInputOption='USER_ENTERED',
-            body=body
-        ).execute()
-        return result
+        for attempt in range(max_retries):
+            try:
+                # Parse the range_name to extract sheet name
+                if '!' in range_name:
+                    sheet_name = range_name.split('!')[0]
+                else:
+                    sheet_name = range_name
+                
+                # First, get all existing data to find the next empty row
+                try:
+                    read_range = f"{sheet_name}!A:A"
+                    result = self.sheets.values().get(
+                        spreadsheetId=spreadsheet_id,
+                        range=read_range
+                    ).execute()
+                    existing_values = result.get('values', [])
+                    next_row = len(existing_values) + 1
+                except:
+                    # If sheet doesn't exist or has no data, start at row 2 (after header)
+                    next_row = 2
+                    
+                body = {
+                    'values': [values]
+                }
+                
+                # Calculate the end column based on number of values
+                end_column_index = len(values) - 1
+                end_column = chr(65 + end_column_index)  # Convert to letter (A=0, B=1, etc.)
+                
+                # Create the correct write range
+                write_range = f"{sheet_name}!A{next_row}:{end_column}{next_row}"
+                
+                result = self.sheets.values().update(
+                    spreadsheetId=spreadsheet_id,
+                    range=write_range,
+                    valueInputOption='USER_ENTERED',
+                    body=body
+                ).execute()
+                return result
+                
+            except Exception as e:
+                error_msg = str(e)
+                
+                # Check for SSL/network errors
+                if "SSL" in error_msg.upper() or "WRONG_VERSION_NUMBER" in error_msg:
+                    if attempt < max_retries - 1:
+                        st.warning(f"⚠️ Koneksi terputus saat menyimpan (percobaan {attempt + 1}/{max_retries}). Mencoba lagi...")
+                        import time
+                        time.sleep(retry_delay)
+                        continue
+                    else:
+                        st.error("🚫 **Gagal menyimpan data - Masalah koneksi**")
+                        raise Exception(f"SSL connection failed after {max_retries} attempts: {error_msg}")
+                
+                # For other errors, retry or raise
+                if attempt < max_retries - 1:
+                    st.warning(f"⚠️ Error menyimpan data (percobaan {attempt + 1}/{max_retries}): {error_msg}")
+                    import time
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    raise Exception(f"Failed to append record after {max_retries} attempts: {error_msg}")
 
     def get_records(self, spreadsheet_id, range_name):
-        try:
-            result = self.sheets.values().get(
-                spreadsheetId=spreadsheet_id,
-                range=range_name
-            ).execute()
-            values = result.get('values', [])
-            
-            # Debug output to understand data structure
-            if hasattr(st, 'session_state') and getattr(st.session_state, '_debug_mode', False):
-                st.write(f"🔍 DEBUG: Raw values received from sheet:")
-                st.write(f"  - Total rows: {len(values)}")
-                if values:
-                    st.write(f"  - First row (headers): {values[0]}")
-                    st.write(f"  - Headers length: {len(values[0])}")
-                    
-                    # Show first few data rows
-                    data_rows = values[1:6]  # First 5 data rows
-                    for i, row in enumerate(data_rows, 1):
-                        st.write(f"  - Row {i}: {row} (length: {len(row)})")
-                    
-                    # Show how empty cells appear
-                    all_row_lengths = [len(row) for row in values]
-                    st.write(f"  - Row lengths: min={min(all_row_lengths)}, max={max(all_row_lengths)}")
-                    
-                    # Check for empty cells representation
-                    empty_patterns = set()
-                    for row in values[:10]:  # Check first 10 rows
-                        for cell in row:
-                            if not cell or cell.strip() == '':
-                                empty_patterns.add(repr(cell))
-                    st.write(f"  - Empty cell patterns found: {empty_patterns}")
-            
-            if not values:
-                return pd.DataFrame()
-            
-            # Simplified processing - just pad rows to max length
-            max_cols = max(len(row) for row in values) if values else 0
-            
-            if max_cols == 0:
-                return pd.DataFrame()
-            
-            # Simple padding without complex filtering
-            headers = values[0] + [''] * (max_cols - len(values[0]))
-            
-            # Pad all data rows to match max_cols
-            data_rows = []
-            for row in values[1:]:
-                padded_row = row + [''] * (max_cols - len(row))
-                data_rows.append(padded_row)
-            
-            # Create DataFrame directly
-            if data_rows:
-                df = pd.DataFrame(data_rows, columns=headers)
-            else:
-                df = pd.DataFrame(columns=headers)
+        max_retries = 3
+        retry_delay = 2
+        
+        for attempt in range(max_retries):
+            try:
+                result = self.sheets.values().get(
+                    spreadsheetId=spreadsheet_id,
+                    range=range_name
+                ).execute()
+                values = result.get('values', [])
                 
-            # Debug output for final DataFrame
-            if hasattr(st, 'session_state') and getattr(st.session_state, '_debug_mode', False):
-                st.write(f"🔍 DEBUG: Resulting DataFrame:")
-                st.write(f"  - Shape: {df.shape}")
-                st.write(f"  - Columns: {list(df.columns)}")
-                if not df.empty:
-                    st.write(f"  - Sample data:")
-                    st.dataframe(df.head(3))
                 
-            return df
-            
-        except Exception as e:
-            # If any error occurs, return empty DataFrame and log the error
-            st.error(f"Error reading sheet data: {str(e)}")
-            return pd.DataFrame()
+                if not values:
+                    return pd.DataFrame()
+                
+                # Simplified processing - just pad rows to max length
+                max_cols = max(len(row) for row in values) if values else 0
+                
+                if max_cols == 0:
+                    return pd.DataFrame()
+                
+                # Simple padding without complex filtering
+                headers = values[0] + [''] * (max_cols - len(values[0]))
+                
+                # Pad all data rows to match max_cols
+                data_rows = []
+                for row in values[1:]:
+                    padded_row = row + [''] * (max_cols - len(row))
+                    data_rows.append(padded_row)
+                
+                # Create DataFrame directly
+                if data_rows:
+                    df = pd.DataFrame(data_rows, columns=headers)
+                else:
+                    df = pd.DataFrame(columns=headers)
+                    
+                return df
+                
+            except Exception as e:
+                error_msg = str(e)
+                
+                # Check for SSL/network errors
+                if "SSL" in error_msg.upper() or "WRONG_VERSION_NUMBER" in error_msg:
+                    if attempt < max_retries - 1:
+                        st.warning(f"⚠️ Koneksi terputus (percobaan {attempt + 1}/{max_retries}). Mencoba lagi dalam {retry_delay} detik...")
+                        import time
+                        time.sleep(retry_delay)
+                        continue
+                    else:
+                        st.error("🚫 **Masalah Koneksi SSL/Jaringan**")
+                        st.error("Kemungkinan penyebab:")
+                        st.error("- Koneksi internet tidak stabil")
+                        st.error("- Firewall atau proxy memblokir akses")
+                        st.error("- Masalah sementara dengan Google API")
+                        st.error("**Solusi:** Coba refresh halaman atau cek koneksi internet")
+                        return pd.DataFrame()
+                
+                # For other errors, show general error message
+                if attempt < max_retries - 1:
+                    st.warning(f"⚠️ Error membaca data (percobaan {attempt + 1}/{max_retries}): {error_msg}")
+                    import time
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    st.error(f"❌ Error reading sheet data: {error_msg}")
+                    return pd.DataFrame()
 
     def _detect_mime_type(self, file_bytes, filename):
         """Detect mime type with fallback methods"""

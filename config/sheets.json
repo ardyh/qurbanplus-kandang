@@ -3,6 +3,32 @@
     "inbound": "Inbound",
     "outbound": "Outbound"
   },
+  "columns": {
+    "inbound": [
+      "Timestamp",
+      "Nomor Nota",
+      "Tipe Hewan",
+      "Supplier",
+      "Varian",
+      "Quantity",
+      "Sohibul Qurban (titip sembelih)",
+      "Nama Pengirim",
+      "Nama Penerima",
+      "Link Nota",
+      "Tanggal Pengiriman",
+      "Catatan"
+    ],
+    "outbound": [
+      "Timestamp",
+      "Tipe Hewan",
+      "Jenis Hewan",
+      "Quantity",
+      "Nomor Mobil (Kirim Hidup)",
+      "Tanggal Keluar",
+      "Keluar Untuk",
+      "Catatan"
+    ]
+  },
   "date_config": {
     "hari_h": "2025-06-06",
     "hari_h_outbound": "2025-06-06"

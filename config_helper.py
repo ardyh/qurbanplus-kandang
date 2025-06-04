@@ -104,4 +104,95 @@ class ConfigHelper:
     
     def get_message(self, message_type: str) -> str:
         """Get UI message by type"""
-        return self.ui_labels["messages"][message_type] 
+        return self.ui_labels["messages"][message_type]
+    
+    def get_sheet_columns(self, sheet_type: str) -> List[str]:
+        """Get column names for a specific sheet type"""
+        return self.sheets["columns"].get(sheet_type, [])
+    
+    def get_column_name(self, sheet_type: str, column_index: int) -> str:
+        """Get specific column name by index"""
+        columns = self.get_sheet_columns(sheet_type)
+        if 0 <= column_index < len(columns):
+            return columns[column_index]
+        return ""
+    
+    def get_column_index(self, sheet_type: str, column_name: str) -> int:
+        """Get column index by name"""
+        columns = self.get_sheet_columns(sheet_type)
+        try:
+            return columns.index(column_name)
+        except ValueError:
+            return -1
+    
+    def get_sheet_range(self, sheet_type: str, start_row: int = 1) -> str:
+        """Get full sheet range based on column count"""
+        sheet_name = self.get_sheet_name(sheet_type)
+        columns = self.get_sheet_columns(sheet_type)
+        if not columns:
+            return f"{sheet_name}!A{start_row}:Z"  # Fallback to wide range
+        
+        # Calculate end column letter (A=0, B=1, etc.)
+        end_col_index = len(columns) - 1
+        end_col_letter = chr(65 + end_col_index)
+        
+        return f"{sheet_name}!A{start_row}:{end_col_letter}"
+    
+    def get_animal_orders(self) -> Dict[str, Any]:
+        """Get all animal order data"""
+        return self.animals.get("animal_orders", {})
+    
+    def get_order_data_for_supplier_and_category(self, animal_type: str, supplier: str, category: str) -> int:
+        """Get ordered quantity for specific supplier and category"""
+        orders = self.get_animal_orders()
+        
+        # Map animal type to order key
+        order_key = "Domba" if animal_type == "Domba/Kambing" else "Sapi"
+        
+        if order_key not in orders:
+            return 0
+        
+        # Find matching category
+        for order in orders[order_key]:
+            # Clean category name for comparison
+            order_category = order["category"]
+            if category.startswith(order_category):
+                vendors = order.get("vendors", {})
+                return vendors.get(supplier, 0)
+        
+        return 0
+    
+    def get_total_orders_by_animal_type(self, animal_type: str) -> Dict[str, int]:
+        """Get total orders grouped by supplier for an animal type"""
+        orders = self.get_animal_orders()
+        order_key = "Domba" if animal_type == "Domba/Kambing" else "Sapi"
+        
+        if order_key not in orders:
+            return {}
+        
+        supplier_totals = {}
+        for order in orders[order_key]:
+            vendors = order.get("vendors", {})
+            for vendor, quantity in vendors.items():
+                if vendor and quantity > 0:  # Skip empty vendor names
+                    if vendor not in supplier_totals:
+                        supplier_totals[vendor] = 0
+                    supplier_totals[vendor] += quantity
+        
+        return supplier_totals
+    
+    def get_category_orders(self, animal_type: str, category: str) -> Dict[str, int]:
+        """Get orders for specific category across all vendors"""
+        orders = self.get_animal_orders()
+        order_key = "Domba" if animal_type == "Domba/Kambing" else "Sapi"
+        
+        if order_key not in orders:
+            return {}
+        
+        # Find matching category
+        for order in orders[order_key]:
+            order_category = order["category"]
+            if category.startswith(order_category):
+                return order.get("vendors", {})
+        
+        return {} 

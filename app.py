@@ -55,8 +55,8 @@ if debug_mode:
 helper = init_helper()
 
 # Get configuration values
-INBOUND_RANGE = config.get_sheet_name("inbound")
-OUTBOUND_RANGE = config.get_sheet_name("outbound")
+INBOUND_RANGE = config.get_sheet_range("inbound")
+OUTBOUND_RANGE = config.get_sheet_range("outbound")
 
 # Main content
 st.markdown("""
@@ -71,49 +71,24 @@ Silakan gunakan menu di sidebar untuk navigasi.
 
 # Add statistics if data is available
 try:
-    col1, col2 = st.columns(2)
     
-    with col1:
-        st.subheader("📊 Statistik Singkat")
+    st.subheader("📊 Statistik Singkat")
+    
+    # Get latest data from sheets
+    inbound_data = helper.get_records(SPREADSHEET_ID, INBOUND_RANGE)
+    outbound_data = helper.get_records(SPREADSHEET_ID, OUTBOUND_RANGE)
+    
+    if not inbound_data.empty:
+        st.metric("Total Data Masuk", len(inbound_data))
+    else:
+        st.metric("Total Data Masuk", 0)
         
-        # Get latest data from sheets
-        inbound_data = helper.get_records(SPREADSHEET_ID, INBOUND_RANGE)
-        outbound_data = helper.get_records(SPREADSHEET_ID, OUTBOUND_RANGE)
-        
-        if not inbound_data.empty:
-            st.metric("Total Data Masuk", len(inbound_data))
-        else:
-            st.metric("Total Data Masuk", 0)
+    if not outbound_data.empty:
+        st.metric("Total Data Keluar", len(outbound_data))
+    else:
+        st.metric("Total Data Keluar", 0)
             
-        if not outbound_data.empty:
-            st.metric("Total Data Keluar", len(outbound_data))
-        else:
-            st.metric("Total Data Keluar", 0)
-            
-    with col2:
-        st.subheader("🗓️ Informasi Hari H")
-        
-        # Get Hari H dates from config
-        hari_h_inbound = config.get_hari_h_date("inbound")
-        hari_h_outbound = config.get_hari_h_date("outbound")
-        
-        st.info(f"**Hari H Masuk:** {hari_h_inbound.strftime('%d %B %Y')}")
-        st.info(f"**Hari H Keluar:** {hari_h_outbound.strftime('%d %B %Y')}")
-        
-        # Calculate days until Hari H
-        today = datetime.now().date()
-        days_until_inbound = (hari_h_inbound - today).days
-        days_until_outbound = (hari_h_outbound - today).days
-        
-        if days_until_inbound >= 0:
-            st.success(f"Hari H Masuk dalam {days_until_inbound} hari")
-        else:
-            st.warning(f"Hari H Masuk sudah lewat {abs(days_until_inbound)} hari yang lalu")
-            
-        if days_until_outbound >= 0:
-            st.success(f"Hari H Keluar dalam {days_until_outbound} hari")
-        else:
-            st.warning(f"Hari H Keluar sudah lewat {abs(days_until_outbound)} hari yang lalu")
+
 
 except Exception as e:
     st.error(f"Error loading data: {str(e)}")

@@ -52,7 +52,7 @@ if debug_mode:
 config = init_config()
 
 # Load configurations from JSON files
-INBOUND_RANGE = config.get_sheet_name("inbound")
+INBOUND_RANGE = config.get_sheet_range("inbound")
 ANIMAL_TYPES = config.get_animal_types()
 SHEEP_CATEGORIES = config.get_sheep_categories()
 COW_CATEGORIES = config.get_cow_categories()
