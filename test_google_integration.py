@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import pandas as pd
 from dotenv import load_dotenv
+import pytz
 
 # Try to load dev.env first, fall back to .env if dev.env doesn't exist
 if os.path.exists('dev.env'):
@@ -19,10 +20,11 @@ def test_google_sheets(helper, spreadsheet_id):
     """Test Google Sheets read and write operations"""
     print("\n=== Testing Google Sheets Integration ===")
     
-    # Test data
+    # Test data with WIB timezone
     test_range = "Inbound!A1:F"
+    wib_timezone = pytz.timezone('Asia/Jakarta')
     test_record = [
-        datetime.now().strftime("%Y-%m-%d"),
+        datetime.now(wib_timezone).strftime("%Y-%m-%d %H:%M:%S"),
         "Goat",
         "Medium",
         "2",

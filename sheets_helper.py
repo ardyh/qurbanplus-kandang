@@ -4,8 +4,14 @@ from googleapiclient.http import MediaIoBaseUpload
 import pandas as pd
 from datetime import datetime
 import io
-import magic
 import streamlit as st
+
+# Try to import magic, fallback if not available
+try:
+    import magic
+    MAGIC_AVAILABLE = True
+except ImportError:
+    MAGIC_AVAILABLE = False
 
 SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
@@ -57,27 +63,104 @@ class GoogleHelper:
         return result
 
     def get_records(self, spreadsheet_id, range_name):
-        result = self.sheets.values().get(
-            spreadsheetId=spreadsheet_id,
-            range=range_name
-        ).execute()
-        values = result.get('values', [])
-        
-        if not values:
-            return pd.DataFrame()
+        try:
+            result = self.sheets.values().get(
+                spreadsheetId=spreadsheet_id,
+                range=range_name
+            ).execute()
+            values = result.get('values', [])
             
-        # Convert to DataFrame with padding for missing columns
-        max_cols = max(len(row) for row in values)
-        headers = values[0] + [''] * (max_cols - len(values[0]))
-        appended_values = [v + [''] * (max_cols - len(v)) for v in values[1:]]
-        df = pd.DataFrame(appended_values, columns=headers)
-        return df
+            # Debug output to understand data structure
+            if hasattr(st, 'session_state') and getattr(st.session_state, '_debug_mode', False):
+                st.write(f"🔍 DEBUG: Raw values received from sheet:")
+                st.write(f"  - Total rows: {len(values)}")
+                if values:
+                    st.write(f"  - First row (headers): {values[0]}")
+                    st.write(f"  - Headers length: {len(values[0])}")
+                    
+                    # Show first few data rows
+                    data_rows = values[1:6]  # First 5 data rows
+                    for i, row in enumerate(data_rows, 1):
+                        st.write(f"  - Row {i}: {row} (length: {len(row)})")
+                    
+                    # Show how empty cells appear
+                    all_row_lengths = [len(row) for row in values]
+                    st.write(f"  - Row lengths: min={min(all_row_lengths)}, max={max(all_row_lengths)}")
+                    
+                    # Check for empty cells representation
+                    empty_patterns = set()
+                    for row in values[:10]:  # Check first 10 rows
+                        for cell in row:
+                            if not cell or cell.strip() == '':
+                                empty_patterns.add(repr(cell))
+                    st.write(f"  - Empty cell patterns found: {empty_patterns}")
+            
+            if not values:
+                return pd.DataFrame()
+            
+            # Simplified processing - just pad rows to max length
+            max_cols = max(len(row) for row in values) if values else 0
+            
+            if max_cols == 0:
+                return pd.DataFrame()
+            
+            # Simple padding without complex filtering
+            headers = values[0] + [''] * (max_cols - len(values[0]))
+            
+            # Pad all data rows to match max_cols
+            data_rows = []
+            for row in values[1:]:
+                padded_row = row + [''] * (max_cols - len(row))
+                data_rows.append(padded_row)
+            
+            # Create DataFrame directly
+            if data_rows:
+                df = pd.DataFrame(data_rows, columns=headers)
+            else:
+                df = pd.DataFrame(columns=headers)
+                
+            # Debug output for final DataFrame
+            if hasattr(st, 'session_state') and getattr(st.session_state, '_debug_mode', False):
+                st.write(f"🔍 DEBUG: Resulting DataFrame:")
+                st.write(f"  - Shape: {df.shape}")
+                st.write(f"  - Columns: {list(df.columns)}")
+                if not df.empty:
+                    st.write(f"  - Sample data:")
+                    st.dataframe(df.head(3))
+                
+            return df
+            
+        except Exception as e:
+            # If any error occurs, return empty DataFrame and log the error
+            st.error(f"Error reading sheet data: {str(e)}")
+            return pd.DataFrame()
+
+    def _detect_mime_type(self, file_bytes, filename):
+        """Detect mime type with fallback methods"""
+        if MAGIC_AVAILABLE:
+            try:
+                return magic.from_buffer(file_bytes.getvalue(), mime=True)
+            except Exception:
+                pass
+        
+        # Fallback: basic mime type detection based on file extension
+        filename_lower = filename.lower()
+        if filename_lower.endswith(('.jpg', '.jpeg')):
+            return 'image/jpeg'
+        elif filename_lower.endswith('.png'):
+            return 'image/png'
+        elif filename_lower.endswith('.pdf'):
+            return 'application/pdf'
+        elif filename_lower.endswith(('.doc', '.docx')):
+            return 'application/msword'
+        else:
+            return 'application/octet-stream'
 
     def upload_file(self, file_bytes, filename, folder_id):
         """Upload a file to Google Drive and return the shareable link."""
         try:
-            # Detect mime type
-            mime_type = magic.from_buffer(file_bytes.getvalue(), mime=True)
+            # Detect mime type with fallback
+            mime_type = self._detect_mime_type(file_bytes, filename)
             
             # Create file metadata
             file_metadata = {

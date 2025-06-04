@@ -5,6 +5,7 @@ from sheets_helper import GoogleHelper
 from config_helper import ConfigHelper
 from environment_helper import get_environment_helper
 import time
+import pytz
 
 # Initialize environment helper (cached)
 env_helper = get_environment_helper()
@@ -226,7 +227,9 @@ with st.form("main_form"):
                 st.write(f"Debug: Number of animal entries = {len(st.session_state.animal_entries)}")
             
             # Create records for each animal entry
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # e.g., "03 June 2025 10:00:30"
+            # Use West Indonesia Time (UTC+7)
+            wib_timezone = pytz.timezone('Asia/Jakarta')
+            timestamp = datetime.now(wib_timezone).strftime("%Y-%m-%d %H:%M:%S")  # e.g., "03 June 2025 10:00:30"
             
             for entry in st.session_state.animal_entries:
                 # Determine final jenis_keluar value

@@ -5,6 +5,7 @@ from sheets_helper import GoogleHelper
 from config_helper import ConfigHelper
 from environment_helper import get_environment_helper
 import time
+import pytz
 
 # Initialize environment helper (cached)
 env_helper = get_environment_helper()
@@ -224,16 +225,31 @@ with st.form("main_form"):
             # Upload receipt if provided
             receipt_url = None
             if receipt_file is not None:
+                # Extract file extension from original filename
+                original_filename = receipt_file.name
+                file_extension = original_filename.split('.')[-1] if '.' in original_filename else 'jpg'
+                
+                # Use receipt number for filename, fallback to timestamp if no receipt number
+                if nomor_nota.strip():
+                    new_filename = f"{nomor_nota.strip()}.{file_extension}"
+                else:
+                    # Fallback to timestamp if no receipt number provided
+                    wib_timezone = pytz.timezone('Asia/Jakarta')
+                    file_timestamp = datetime.now(wib_timezone).strftime('%Y%m%d_%H%M%S')
+                    new_filename = f"nota_masuk_{file_timestamp}.{file_extension}"
+                
                 receipt_url = helper.upload_file(
                     receipt_file,
-                    f"nota_masuk_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{receipt_file.name}",
+                    new_filename,
                     DRIVE_FOLDER_ID
                 )
                 if debug_mode:
-                    st.write(f"Debug: Receipt uploaded to {receipt_url}")
+                    st.write(f"Debug: Receipt uploaded as '{new_filename}' to {receipt_url}")
             
             # Create records for each animal entry
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # e.g., "03 June 2025 10:00:30"
+            # Use West Indonesia Time (UTC+7)
+            wib_timezone = pytz.timezone('Asia/Jakarta')
+            timestamp = datetime.now(wib_timezone).strftime("%Y-%m-%d %H:%M:%S")  # e.g., "03 June 2025 10:00:30"
             
             for idx, entry in enumerate(st.session_state.animal_entries):
                 record = [
