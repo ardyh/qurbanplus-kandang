@@ -107,10 +107,9 @@ with st.form("add_entry_form", clear_on_submit=True):
         st.markdown("##### Jumlah")
         quantity = st.number_input(
             form_labels["fields"].get("jumlah_hewan", "Jumlah Hewan"), 
-            min_value=1, 
             value=1, 
             key="quantity",
-            help=f"Masukkan jumlah {animal_type.lower()} yang keluar"
+            help=f"Masukkan jumlah {animal_type.lower()} yang keluar (gunakan nilai negatif untuk edit/koreksi)"
         )
     
     # Add entry button with dynamic label

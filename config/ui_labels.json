@@ -7,7 +7,7 @@
         "sapi": "Data Sapi"
       },
       "fields": {
-        "nomor_nota": "Nomor Nota (masukkan keseluruhan angka dan huruf)",
+        "nomor_nota": "Nomor Nota (QP-KDG-TT-00nn)",
         "nama_pengirim": "Nama Pengirim",
         "nama_penerima": "Nama Penerima (Tim Kandang)",
         "sohibul_qurban": "Nama Sohibul Qurban (untuk Titip Sembelih)",

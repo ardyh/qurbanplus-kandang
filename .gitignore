@@ -46,3 +46,6 @@ Thumbs.db
 
 # Tests
 tests/**
+
+# Assets
+receipt_screenshots/**
